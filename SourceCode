@@ -1,0 +1,167 @@
+// Fix the delay for input, because of the loop the button will
+// only be detected if you press it for long enough until
+// the loop comes around; This may cause the button to record
+// multiple instances of the same position. Need to find a button
+// or a way to create an input method that only triggers once on
+// press, not indefinitely until release.
+
+// Add LEDs to signal phase of recording: Phase one of
+// initiation, Phase two of position recording, and Phase three
+// of playback.
+// (EDIT: Position recording LED installed, will flash when
+// a new position is recorded.)
+// (COMPLETED: Added three blinks for initiation, one blink for
+// position recording, and two blinks per playback skip.)
+
+// Use an LED panel to display the process' status and
+// positional data. Mount to board.
+
+// Servo is not reading or writing in terms of 180 degrees.
+// Values are too large, not accurate.
+// (FIXED: analogRead(A0) -> myServo1.read()) 
+
+// Slow down servos!
+
+# include <Servo.h>
+
+Servo myServo1;
+Servo myServo2;
+Servo myServo3;
+Servo myServo4;
+int potVal1 = 0;
+int potVal2 = 0;
+int potVal3 = 0;
+int potVal4 = 0;
+int servoArray1[100];
+int servoArray2[100];
+int servoArray3[100];
+int servoArray4[100];
+int newVal1 = 0;
+int newVal2 = 0;
+int newVal3 = 0;
+int newVal4 = 0;
+int placement = -1;
+bool recording = false;
+bool posRec = false;
+int i = 0;
+
+void setup() {
+  pinMode(13, OUTPUT);
+  // Status led for placement recording indication
+  pinMode(2, INPUT_PULLUP);
+  pinMode(7, INPUT_PULLUP);
+  myServo1.attach(3);
+  myServo2.attach(4);
+  myServo3.attach(5);
+  myServo4.attach(6);
+  Serial.begin(9600);
+  digitalWrite(2, HIGH);
+  digitalWrite(7, HIGH);
+}
+
+void loop() {
+
+  potVal1 = analogRead(A0);
+  newVal1 = map(potVal1, 0, 1023, 0, 180);
+  myServo1.write(newVal1);
+
+  potVal2 = analogRead(A1);
+  newVal2 = map(potVal2, 0, 1023, 0, 180);
+  myServo2.write(newVal2);
+
+  potVal3 = analogRead(A2);
+  newVal3 = map(potVal3, 0, 1023, 0, 180);
+  myServo3.write(newVal3);
+
+  potVal4 = analogRead(A3);
+  newVal4 = map(potVal4, 0, 1023, 0, 180);
+  myServo4.write(newVal4);
+  
+  if (digitalRead(2) == 0) {
+    recording = true;
+
+    if (placement < 0) {
+      Serial.println("Recording Mode: ON");
+      digitalWrite(13, HIGH);
+      delay(200);
+      digitalWrite(13, LOW);
+      delay(200);
+      digitalWrite(13, HIGH);
+      delay(200);
+      digitalWrite(13, LOW);
+      delay(200);
+      digitalWrite(13, HIGH);
+      delay(200);
+      digitalWrite(13, LOW);
+    } else {
+      Serial.println("");
+      Serial.println("Playback Initiated");
+    }
+  }
+  
+  if (digitalRead(7) == 0 and recording == true) {
+    posRec = true;
+
+    placement++;
+    Serial.println("");
+    Serial.print("Placement Increased, Recording #: ");
+    Serial.println(placement);
+  }
+  
+  if (recording == true and posRec == true) {
+    posRec = false;
+
+    servoArray1[placement] = myServo1.read();
+    Serial.print("Servo 1 Position Recorded: ");
+    Serial.println(servoArray1[placement]);
+
+    servoArray2[placement] = myServo2.read();
+    Serial.print("Servo 2 Position Recorded: ");
+    Serial.println(servoArray2[placement]);
+
+    servoArray3[placement] = myServo3.read();
+    Serial.print("Servo 3 Position Recorded: ");
+    Serial.println(servoArray3[placement]);
+
+    servoArray4[placement] = myServo4.read();
+    Serial.print("Servo 4 Position Recorded: ");
+    Serial.println(servoArray4[placement]);
+
+    digitalWrite(13, HIGH);
+    delay(500);
+    digitalWrite(13, LOW);
+  }
+  
+  if (digitalRead(2) == 0 and placement >= 0) {
+    for (i = 0; i < placement + 1; i++) {
+      delay(1000);
+
+      myServo1.write(servoArray1[i]);
+      myServo2.write(servoArray2[i]);
+      myServo3.write(servoArray3[i]);
+      myServo4.write(servoArray4[i]);
+
+      Serial.println("");
+      Serial.print("Position In Arrays: ");
+      Serial.println(i);
+
+      Serial.print("Servo 1 Position: ");
+      Serial.println(servoArray1[i]);
+      Serial.print("Servo 2 Position: ");
+      Serial.println(servoArray2[i]);
+      Serial.print("Servo 3 Position: ");
+      Serial.println(servoArray3[i]);
+      Serial.print("Servo 4 Position: ");
+      Serial.println(servoArray4[i]);
+      digitalWrite(13, HIGH);
+      delay(200);
+      digitalWrite(13, LOW);
+      delay(200);
+      digitalWrite(13, HIGH);
+      delay(200);
+      digitalWrite(13, LOW);
+
+      
+    }
+  }
+}
