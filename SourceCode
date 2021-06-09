@@ -4,6 +4,7 @@
 // multiple instances of the same position. Need to find a button
 // or a way to create an input method that only triggers once on
 // press, not indefinitely until release.
+// (FIXED: With INPUT_PULLUP)
 
 // Add LEDs to signal phase of recording: Phase one of
 // initiation, Phase two of position recording, and Phase three
@@ -47,7 +48,7 @@ int i = 0;
 
 void setup() {
   pinMode(13, OUTPUT);
-  // Status led for placement recording indication
+  // Status led for placement recording indicaiton
   pinMode(2, INPUT_PULLUP);
   pinMode(7, INPUT_PULLUP);
   myServo1.attach(3);
